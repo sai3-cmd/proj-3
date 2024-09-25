@@ -1,0 +1,88 @@
+npx create-react-app frontend
+cd frontend
+
+npm install axios
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import TodoList from './components/TodoList';
+import TodoForm from './components/TodoForm';
+
+const App = () => {
+  const [todos, setTodos] = useState([]);
+
+  // Fetch to-dos from backend
+  useEffect(() => {
+    axios.get('/api/todos')
+      .then(res => setTodos(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
+  return (
+    <div>
+      <h1>To-Do App</h1>
+      <TodoForm setTodos={setTodos} />
+      <TodoList todos={todos} setTodos={setTodos} />
+    </div>
+  );
+};
+
+export default App;
+
+
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const TodoForm = ({ setTodos }) => {
+  const [text, setText] = useState('');
+
+  const handleSubmit = e => {
+    e.preventDefault();
+    axios.post('/api/todos', { text })
+      .then(res => setTodos(prev => [...prev, res.data]))
+      .catch(err => console.error(err));
+    setText('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <input
+        type="text"
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder="Add a new to-do"
+      />
+      <button type="submit">Add</button>
+    </form>
+  );
+};
+
+export default TodoForm;
+
+
+import React from 'react';
+import axios from 'axios';
+
+const TodoList = ({ todos, setTodos }) => {
+  const handleDelete = id => {
+    axios.delete(`/api/todos/${id}`)
+      .then(() => setTodos(prev => prev.filter(todo => todo._id !== id)))
+      .catch(err => console.error(err));
+  };
+
+  return (
+    <ul>
+      {todos.map(todo => (
+        <li key={todo._id}>
+          {todo.text}
+          <button onClick={() => handleDelete(todo._id)}>Delete</button>
+        </li>
+      ))}
+    </ul>
+  );
+};
+
+export default TodoList;
+
+
+
